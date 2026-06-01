@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>카페 키오스크</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:#1a1a2e;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+/* ── SELECTOR ── */
+#selector{width:100vw;height:100vh;background:linear-gradient(160deg,#0d0d1a,#1a1040);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;}
+.sel-logo{font-size:34px;font-weight:900;color:#4fc3f7;letter-spacing:5px;}
+.sel-logo span{color:#fff;}
+.sel-sub{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:3px;margin-top:-26px;}
+.sel-cards{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;}
+.sel-card{width:260px;height:290px;border-radius:18px;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:transform .18s;font-family:'Noto Sans KR',sans-serif;}
+.sel-card:active{transform:scale(.95);}
+.sel-card.complex{background:#1e2a3a;border:2px solid #4fc3f7;box-shadow:0 8px 40px rgba(79,195,247,.2);}
+.sel-card.simple{background:#1a3a2a;border:2px solid #66bb6a;box-shadow:0 8px 40px rgba(102,187,106,.2);}
+.sel-icon{font-size:52px;}
+.sel-title{font-size:19px;font-weight:700;color:#fff;}
+.sel-desc{font-size:12px;color:rgba(255,255,255,.55);text-align:center;line-height:1.6;padding:0 14px;}
+
+/* ── KIOSK WRAP ── */
+#kiosk-wrap{display:none;width:100vw;height:100vh;flex-direction:column;position:relative;overflow:hidden;}
+.back-nav{position:absolute;top:10px;left:10px;z-index:400;background:rgba(0,0,0,.7);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:7px 16px;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);font-family:'Noto Sans KR',sans-serif;}
+
+/* ════════════════════════════
+   COMPLEX KIOSK  (비그플 스타일)
+════════════════════════════ */
+#complex-kiosk{width:100%;height:100%;display:flex;flex-direction:column;background:#f0f4f8;overflow:hidden;}
+
+/* 최상단 헤더 */
+.ck-header{background:#1a2744;padding:0 16px;height:48px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.ck-header-home{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:4px;}
+.ck-header-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:1px;}
+.ck-header-exit{background:#4a90d9;border:none;color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+/* 카테고리 탭 */
+.ck-cats{background:#fff;display:flex;overflow-x:auto;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid #dde3ea;}
+.ck-cats::-webkit-scrollbar{display:none;}
+.ck-cat{padding:11px 16px;font-size:13px;color:#666;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;flex-shrink:0;}
+.ck-cat.active{color:#4a90d9;border-bottom-color:#4a90d9;font-weight:700;}
+
+/* 메뉴 그리드 */
+.ck-body{display:flex;flex:1;overflow:hidden;}
+.ck-menu-area{flex:1;overflow-y:auto;padding:12px;}
+.ck-menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.ck-menu-card{background:#fff;border-radius:10px;border:1px solid #dde3ea;overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s;position:relative;}
+.ck-menu-card:active{transform:scale(.97);}
+.ck-menu-card:hover{border-color:#4a90d9;box-shadow:0 2px 12px rgba(74,144,217,.15);}
+.ck-menu-card.selected{border-color:#4a90d9;background:#f0f7ff;}
+.ck-menu-emoji{width:100%;aspect-ratio:1;background:#f5f8fb;display:flex;align-items:center;justify-content:center;font-size:38px;}
+.ck-menu-info{padding:7px 8px 9px;}
+.ck-menu-name{font-size:12px;font-weight:700;color:#222;line-height:1.3;}
+.ck-menu-price{font-size:13px;font-weight:700;color:#4a90d9;margin-top:4px;}
+
+/* 장바구니 패널 */
+.ck-cart-panel{width:200px;background:#fff;border-left:1px solid #dde3ea;display:flex;flex-direction:column;flex-shrink:0;}
+.ck-cart-title{padding:10px 12px;font-size:13px;font-weight:700;color:#222;border-bottom:1px solid #eee;}
+.ck-cart-items{flex:1;overflow-y:auto;padding:8px 10px;}
+.ck-cart-empty{font-size:11px;color:#bbb;text-align:center;padding:14px 0;}
+.ck-cart-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0;}
+.ck-cart-img{font-size:22px;flex-shrink:0;}
+.ck-cart-info{flex:1;min-width:0;}
+.ck-cart-iname{font-size:10px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ck-cart-iprice{font-size:11px;color:#4a90d9;font-weight:700;}
+.ck-cart-qty{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.ck-qty-btn{width:18px;height:18px;border-radius:50%;border:1px solid #ccc;background:#f5f5f5;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ck-qty-num{font-size:11px;font-weight:700;color:#333;min-width:12px;text-align:center;}
+.ck-cart-del{font-size:14px;color:#ccc;cursor:pointer;flex-shrink:0;}
+
+/* 하단 주문 바 */
+.ck-order-bar{background:#fff;border-top:1px solid #dde3ea;padding:10px 12px;flex-shrink:0;}
+.ck-order-summary{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:4px;}
+.ck-order-summary strong{color:#4a90d9;font-size:14px;}
+.ck-order-btns{display:flex;gap:6px;}
+.ck-cancel-btn{flex:1;padding:10px;background:#f0f4f8;border:1px solid #ccc;border-radius:8px;font-size:13px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.ck-pay-btn{flex:2;padding:10px;background:#4a90d9;border:none;border-radius:8px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.ck-pay-btn:active{background:#357abd;}
+
+/* 하단 진행바 */
+.ck-prog{height:3px;background:#dde3ea;flex-shrink:0;}
+.ck-prog-fill{height:100%;background:#4a90d9;transition:width .3s;}
+
+/* ── COMPLEX MODALS ── */
+/* 온도/옵션 모달 */
+.cmodal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:600;align-items:center;justify-content:center;padding:16px;}
+.cmodal-back.on{display:flex;}
+.cmodal{background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:cmin .2s ease;}
+@keyframes cmin{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.cmodal-hd{border-top:4px solid #4a90d9;padding:16px 16px 10px;display:flex;align-items:flex-start;gap:12px;}
+.cmodal-img{font-size:40px;flex-shrink:0;}
+.cmodal-hd-info{flex:1;}
+.cmodal-hd-name{font-size:16px;font-weight:700;color:#222;}
+.cmodal-qty-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
+.cmodal-qty-btn{width:26px;height:26px;border-radius:50%;border:1px solid #ccc;background:#f5f5f5;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cmodal-qty-num{font-size:15px;font-weight:700;color:#333;}
+.cmodal-price{font-size:16px;font-weight:700;color:#4a90d9;margin-left:auto;}
+.cmodal-body{padding:0 16px 16px;}
+.cmodal-opt-label{font-size:12px;color:#888;margin:10px 0 6px;}
+.cmodal-opt-btns{display:flex;gap:8px;}
+.cmodal-opt-btn{flex:1;padding:10px 6px;border-radius:8px;border:2px solid #dde3ea;background:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .12s;}
+.cmodal-opt-btn.hot{color:#e53935;}
+.cmodal-opt-btn.ice{color:#1976d2;}
+.cmodal-opt-btn.sel.hot{border-color:#e53935;background:#fff5f5;}
+.cmodal-opt-btn.sel.ice{border-color:#1976d2;background:#f0f7ff;}
+.cmodal-footer{display:flex;border-top:1px solid #eee;}
+.cmodal-cancel{flex:1;padding:14px;background:#f5f5f5;border:none;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.cmodal-confirm{flex:1;padding:14px;background:#4a90d9;border:none;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+/* 적립 모달 (Step1) */
+.cstep-hd{font-size:13px;font-weight:700;color:#4a90d9;padding:14px 16px 4px;}
+.cstep-title{font-size:15px;font-weight:700;color:#222;padding:0 16px 6px;}
+.cstep-desc{font-size:11px;color:#888;padding:0 16px 12px;line-height:1.5;}
+.cstep-opt-row{display:flex;gap:10px;padding:0 16px 16px;}
+.cstep-opt-btn{flex:1;padding:16px 8px;border-radius:10px;border:2px solid #dde3ea;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Noto Sans KR',sans-serif;transition:border-color .12s;}
+.cstep-opt-btn:hover{border-color:#4a90d9;}
+.cstep-opt-icon{font-size:28px;}
+.cstep-opt-label{font-size:13px;font-weight:700;color:#333;}
+.cstep-next-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 14px;border-top:1px solid #eee;}
+.cstep-total{font-size:12px;color:#666;}
+.cstep-total strong{color:#4a90d9;font-size:14px;}
+.cstep-nav{display:flex;gap:6px;}
+.cstep-prev{padding:8px 16px;background:#f0f4f8;border:1px solid #ccc;border-radius:6px;font-size:12px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.cstep-next{padding:8px 20px;background:#4a90d9;border:none;border-radius:6px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.cstep-all-cancel{padding:8px 14px;background:#f0f4f8;border:1px solid #ccc;border-radius:6px;font-size:12px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+/* Step2 결제 */
+.cstep2-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 16px 16px;}
+.cstep2-method{padding:14px 8px;border-radius:8px;border:2px solid #dde3ea;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Noto Sans KR',sans-serif;transition:all .12s;}
+.cstep2-method:hover{border-color:#4a90d9;}
+.cstep2-method.sel{border-color:#4a90d9;background:#f0f7ff;}
+.cstep2-icon{font-size:24px;}
+.cstep2-label{font-size:11px;font-weight:700;color:#444;}
+
+/* Step 카드결제 키패드 */
+.ckeypad-hd{background:#4a90d9;padding:14px 16px;}
+.ckeypad-hd h3{font-size:16px;font-weight:700;color:#fff;}
+.ckeypad-hd p{font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;}
+.ckeypad-display{margin:12px 16px 0;background:#f0f7ff;border:2px solid #4a90d9;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.ckeypad-left{font-size:12px;color:#666;}
+.ckeypad-remain{font-size:14px;font-weight:700;color:#4a90d9;}
+.ckeypad-paid{font-size:12px;color:#888;margin-top:2px;}
+.ckeypad-btn-all{background:#4a90d9;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.ckeypad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px 16px;}
+.ck-key{padding:12px;border-radius:8px;border:1px solid #dde3ea;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;transition:background .1s;}
+.ck-key:active{background:#e8f0fe;}
+.ck-key.del{color:#e53935;}
+.ck-key.all-del{font-size:11px;color:#666;}
+
+/* 결제 완료 */
+.ccomplete-body{padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;}
+.ccomplete-num{font-size:72px;font-weight:900;color:#4a90d9;line-height:1;animation:pop .5s ease;}
+@keyframes pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.ccomplete-title{font-size:17px;font-weight:700;color:#222;}
+.ccomplete-sub-blue{font-size:13px;color:#4a90d9;font-weight:700;}
+.ccomplete-desc{font-size:12px;color:#666;line-height:1.6;}
+.ccomplete-receipt{font-size:48px;animation:bounce 1s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.ccomplete-notice{font-size:11px;color:#999;line-height:1.5;}
+
+/* 영수증 선택 */
+.creceipt-body{padding:20px 16px;}
+.creceipt-title{font-size:14px;font-weight:700;color:#222;margin-bottom:4px;}
+.creceipt-stamp{font-size:11px;color:#444;margin-bottom:4px;line-height:1.6;}
+.creceipt-stamp span{display:block;}
+.creceipt-prog{height:6px;background:#eee;border-radius:3px;margin:10px 0;}
+.creceipt-prog-fill{height:100%;background:#4a90d9;border-radius:3px;width:40%;}
+.creceipt-btns{display:flex;gap:8px;margin-top:14px;}
+.creceipt-btn{flex:1;padding:12px;border-radius:8px;border:2px solid #4a90d9;background:#fff;font-size:14px;font-weight:700;color:#4a90d9;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.creceipt-btn.primary{background:#4a90d9;color:#fff;}
+.csim-note{font-size:10px;color:#4a90d9;text-align:center;margin-top:10px;}
+
+/* ════════════════════════════
+   SIMPLE KIOSK
+════════════════════════════ */
+#simple-kiosk{width:100%;height:100%;display:flex;flex-direction:column;background:#fff;overflow:hidden;}
+.sk-topbar{background:#f5c842;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sk-topbar-home{background:#333;color:#fff;border:none;border-radius:50px;padding:8px 20px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-topbar-logo{font-size:20px;font-weight:900;color:#1a1a1a;letter-spacing:2px;}
+.sk-topbar-back{background:#333;color:#fff;border:none;border-radius:50px;padding:8px 20px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-stepbar{background:#f0e8cc;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:1px solid #ddd;}
+.sk-step-label{font-size:14px;font-weight:700;color:#333;min-width:64px;}
+.sk-step-track{flex:1;height:8px;background:#ddd;border-radius:4px;}
+.sk-step-fill{height:100%;background:#333;border-radius:4px;transition:width .3s;}
+.sk-step-pct{font-size:13px;color:#999;min-width:36px;text-align:right;}
+.sk-screen{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.sk-screen.active{display:flex;}
+.sk-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;gap:28px;overflow:hidden;}
+.sk-q{font-size:32px;font-weight:900;color:#1a1a1a;text-align:center;line-height:1.4;}
+.sk-choices{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.sk-choice{min-width:200px;min-height:160px;background:#fff;border:4px solid #e8e8e8;border-radius:22px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:border-color .15s,transform .15s;font-family:'Noto Sans KR',sans-serif;padding:22px;}
+.sk-choice:active{transform:scale(.95);}
+.sk-choice:hover{border-color:#f5c842;}
+.sk-choice.primary{background:#fff;border-color:#e8e8e8;}
+.sk-choice-icon{font-size:50px;}
+.sk-choice-label{font-size:26px;font-weight:700;color:#1a1a1a;text-align:center;line-height:1.3;}
+.sk-choice.primary .sk-choice-label{color:#1a1a1a;}
+.sk-choice-sub{font-size:14px;color:#999;}
+.sk-choice.primary .sk-choice-sub{color:#999;}
+.sk-menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;width:100%;max-width:580px;}
+.sk-menu-card{background:#fff;border:4px solid #e8e8e8;border-radius:22px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:border-color .15s,transform .15s;font-family:'Noto Sans KR',sans-serif;}
+.sk-menu-card:active{transform:scale(.95);}
+.sk-menu-card:hover{border-color:#f5c842;}
+.sk-menu-card.more{background:#f9f9f9;border-color:#e0e0e0;}
+.sk-menu-emoji{font-size:52px;}
+.sk-menu-name{font-size:24px;font-weight:700;color:#1a1a1a;}
+.sk-menu-price{font-size:19px;color:#333;font-weight:700;}
+.sk-menu-card.more .sk-menu-name{font-size:20px;color:#999;}
+.sk-menu-card.more .sk-menu-price{color:#bbb;}
+.sk-pay-grid{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.sk-pay-card{min-width:180px;min-height:140px;border-radius:20px;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);transition:transform .15s;font-family:'Noto Sans KR',sans-serif;}
+.sk-pay-card:active{transform:scale(.95);}
+.sk-pay-credit{background:#333;}
+.sk-pay-cash{background:#333;border:none;}
+.sk-pay-icon{font-size:42px;}
+.sk-pay-label{font-size:22px;font-weight:700;}
+.sk-card-box{background:#f9f3e8;border:3px solid #f5c842;border-radius:22px;padding:30px;text-align:center;width:100%;max-width:480px;}
+.sk-card-box h2{font-size:24px;color:#d62b2b;font-weight:700;}
+.sk-card-big{font-size:28px;font-weight:900;color:#1a1a1a;margin:4px 0 8px;}
+.sk-card-box p{font-size:14px;color:#777;line-height:1.6;}
+.sk-card-anim{font-size:60px;margin:14px 0;animation:cardIn 1.2s ease-in-out infinite;display:inline-block;}
+@keyframes cardIn{0%{transform:translateY(0)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}
+.sk-total-box{background:#fff;border:2px solid #eee;border-radius:14px;padding:14px 24px;width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:center;}
+.sk-total-label{font-size:17px;color:#555;}
+.sk-total-amount{font-size:22px;font-weight:900;color:#333;}
+.sk-cancel-btn{width:100%;max-width:480px;padding:15px;background:#333;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-proceed-btn{width:100%;max-width:480px;padding:15px;background:#333;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-complete-num{font-size:100px;font-weight:900;color:#333;line-height:1;animation:pop .5s ease;}
+@keyframes pop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.sk-complete-title{font-size:28px;font-weight:900;color:#1a1a1a;text-align:center;}
+.sk-complete-sub{font-size:16px;color:#777;text-align:center;line-height:1.6;}
+.sk-receipt-box{background:#f9f9f9;border:2px dashed #ddd;border-radius:18px;padding:20px 28px;width:100%;max-width:420px;}
+.sk-receipt-row{display:flex;justify-content:space-between;padding:5px 0;font-size:16px;color:#444;}
+.sk-receipt-divider{border:none;border-top:1px dashed #ccc;}
+.sk-receipt-total{display:flex;justify-content:space-between;padding:10px 0 0;font-size:18px;font-weight:700;color:#1a1a1a;border-top:1px solid #ddd;margin-top:6px;}
+.sk-again-btn{padding:16px 50px;border-radius:50px;border:none;background:#333;color:#fff;font-size:19px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-guide{background:#f5c842;padding:11px 16px;display:flex;align-items:center;flex-shrink:0;}
+.sk-guide-text{font-size:13px;color:#333;line-height:1.5;flex:1;}
+
+/* 간편모드 적립 패널 */
+.sk-loyalty-panel{background:#fff8e1;border:3px solid #f5c842;border-radius:18px;padding:18px 22px;width:100%;max-width:480px;display:flex;gap:14px;align-items:flex-start;}
+.sk-loyalty-icon{font-size:32px;flex-shrink:0;}
+.sk-loyalty-title{font-size:19px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.sk-loyalty-desc{font-size:14px;color:#777;margin-bottom:12px;}
+.sk-loyalty-btns{display:flex;gap:10px;}
+.sk-loyalty-yes{padding:10px 22px;background:#333;color:#fff;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.sk-loyalty-no{padding:10px 22px;background:#333;color:#fff;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+
+/* AI 버튼 */
+.sk-ai-btn{position:fixed;bottom:60px;right:14px;z-index:300;background:#2d7a4a;border:none;border-radius:16px;padding:16px 22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif;}
+.sk-ai-btn-icon{display:none;}
+.sk-ai-btn-text{font-size:20px;font-weight:900;color:#fff;white-space:nowrap;}
+.sk-ai-overlay{display:none;position:fixed;inset:0;z-index:299;}
+.sk-ai-overlay.on{display:block;}
+.sk-ai-popup{display:none;position:fixed;bottom:130px;right:14px;z-index:300;background:#fff;border-radius:18px 18px 4px 18px;box-shadow:0 8px 32px rgba(0,0,0,.18);padding:18px 22px;max-width:280px;animation:popupIn .2s ease;}
+.sk-ai-popup.on{display:block;}
+@keyframes popupIn{from{transform:scale(.85) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.sk-ai-popup-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sk-ai-avatar{width:38px;height:38px;border-radius:50%;background:#2d7a4a;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.sk-ai-name{font-size:15px;font-weight:700;color:#1a1a1a;}
+.sk-ai-status{font-size:12px;color:#2d7a4a;}
+.sk-ai-bubble{font-size:16px;color:#1a1a1a;line-height:1.6;}
+
+/* 모달 공통 */
+.modal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-back.on{display:flex;}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:440px;overflow:hidden;animation:cmin .2s ease;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-title{font-size:17px;font-weight:700;color:#1a1a1a;padding:18px 20px 14px;border-bottom:1px solid #eee;text-align:center;}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:12px;}
+.modal-desc{font-size:15px;color:#555;text-align:center;line-height:1.6;}
+.modal-btn-row{display:flex;gap:10px;}
+.modal-yes{flex:1;padding:14px;background:#333;color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.modal-no{flex:1;padding:14px;background:#333;color:#fff;border:none;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+</style>
+</head>
+<body>
+
+<!-- ═══ SELECTOR ═══ -->
+<div id="selector">
+  <div class="sel-logo">BREW<span>COMMA</span></div>
+  <div class="sel-sub">SPECIALTY COFFEE</div>
+  <div class="sel-cards">
+    <button class="sel-card complex" onclick="launch('complex')">
+      <div class="sel-icon">🖥️</div>
+      <div class="sel-title">복잡한 키오스크</div>
+      <div class="sel-desc">S#2 촬영용<br>할머니가 당황하는 장면</div>
+    </button>
+    <button class="sel-card simple" onclick="launch('simple')">
+      <div class="sel-icon">✅</div>
+      <div class="sel-title">노인 간편 키오스크</div>
+      <div class="sel-desc">S#5 촬영용<br>개선된 간편 모드</div>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ KIOSK WRAP ═══ -->
+<div id="kiosk-wrap">
+  <button class="back-nav" onclick="goSelector()">← 처음으로</button>
+
+  <!-- ══ COMPLEX KIOSK ══ -->
+  <div id="complex-kiosk">
+    <div class="ck-header">
+      <button class="ck-header-home" onclick="goSelector()">🏠 처음화면</button>
+      <div class="ck-header-title">비그플 카페</div>
+      <button class="ck-header-exit">나가기</button>
+    </div>
+    <div class="ck-cats">
+      <div class="ck-cat active" onclick="ckCat(this)">추천메뉴</div>
+      <div class="ck-cat" onclick="ckCat(this)">커피</div>
+      <div class="ck-cat" onclick="ckCat(this)">에이드/주스</div>
+      <div class="ck-cat" onclick="ckCat(this)">티</div>
+      <div class="ck-cat" onclick="ckCat(this)">디저트</div>
+    </div>
+    <div class="ck-body">
+      <div class="ck-menu-area">
+        <div class="ck-menu-grid" id="ck-menu-grid">
+          <div class="ck-menu-card" onclick="ckOpenItem('아메리카노','☕',2500)"><div class="ck-menu-emoji">☕</div><div class="ck-menu-info"><div class="ck-menu-name">아메리카노</div><div class="ck-menu-price">2,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('카페라떼','🥛',3900)"><div class="ck-menu-emoji">🥛</div><div class="ck-menu-info"><div class="ck-menu-name">카페라떼</div><div class="ck-menu-price">3,900원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('카페모카','🍫',4500)"><div class="ck-menu-emoji">🍫</div><div class="ck-menu-info"><div class="ck-menu-name">카페모카</div><div class="ck-menu-price">4,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('자몽에이드','🍊',4500)"><div class="ck-menu-emoji">🍊</div><div class="ck-menu-info"><div class="ck-menu-name">자몽에이드</div><div class="ck-menu-price">4,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('망고에이드','🥭',4500)"><div class="ck-menu-emoji">🥭</div><div class="ck-menu-info"><div class="ck-menu-name">망고에이드</div><div class="ck-menu-price">4,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('키위주스','🥝',4800)"><div class="ck-menu-emoji">🥝</div><div class="ck-menu-info"><div class="ck-menu-name">키위주스</div><div class="ck-menu-price">4,800원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('페퍼민트','🌿',3500)"><div class="ck-menu-emoji">🌿</div><div class="ck-menu-info"><div class="ck-menu-name">페퍼민트</div><div class="ck-menu-price">3,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('캐모마일','🌼',3500)"><div class="ck-menu-emoji">🌼</div><div class="ck-menu-info"><div class="ck-menu-name">캐모마일</div><div class="ck-menu-price">3,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('복숭아티','🍑',3500)"><div class="ck-menu-emoji">🍑</div><div class="ck-menu-info"><div class="ck-menu-name">복숭아티</div><div class="ck-menu-price">3,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('생크림 롤케이크','🍰',3500)"><div class="ck-menu-emoji">🍰</div><div class="ck-menu-info"><div class="ck-menu-name">생크림 롤케이크</div><div class="ck-menu-price">3,500원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('쿠키 크루아상 와플','🧇',4000)"><div class="ck-menu-emoji">🧇</div><div class="ck-menu-info"><div class="ck-menu-name">쿠키 크루아상 와플</div><div class="ck-menu-price">4,000원</div></div></div>
+          <div class="ck-menu-card" onclick="ckOpenItem('크루아상 와플','🥐',2500)"><div class="ck-menu-emoji">🥐</div><div class="ck-menu-info"><div class="ck-menu-name">크루아상 와플</div><div class="ck-menu-price">2,500원</div></div></div>
+        </div>
+      </div>
+      <div class="ck-cart-panel">
+        <div class="ck-cart-title">🛒 장바구니 <span id="ck-cnt">(0)</span></div>
+        <div class="ck-cart-items" id="ck-cart-items"><div class="ck-cart-empty">메뉴를 선택하세요</div></div>
+        <div class="ck-order-bar">
+          <div class="ck-order-summary"><span>합계</span><strong id="ck-total">0원</strong></div>
+          <div class="ck-order-btns">
+            <button class="ck-cancel-btn" onclick="ckReset()">전체취소</button>
+            <button class="ck-pay-btn" onclick="ckOpenStep1()">결제하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ck-prog"><div class="ck-prog-fill" id="ck-prog" style="width:0%"></div></div>
+  </div><!-- /complex-kiosk -->
+
+  <!-- ══ SIMPLE KIOSK ══ -->
+  <div id="simple-kiosk">
+    <div class="sk-topbar">
+      <button class="sk-topbar-home" onclick="skGo(0)">처음화면</button>
+      <div class="sk-topbar-logo">BREWCOMMA</div>
+      <button class="sk-topbar-back" onclick="skBack()">이전으로</button>
+    </div>
+    <div class="sk-stepbar">
+      <div class="sk-step-label" id="sk-label">시작</div>
+      <div class="sk-step-track"><div class="sk-step-fill" id="sk-fill" style="width:0%"></div></div>
+      <div class="sk-step-pct" id="sk-pct">0%</div>
+    </div>
+
+    <!-- S0 모드선택 -->
+    <div class="sk-screen active" id="sk-s0">
+      <div class="sk-content">
+        <div class="sk-q">주문 방식을 선택해 주세요</div>
+        <div class="sk-choices">
+          <button class="sk-choice" onclick="skGo(1)"><div class="sk-choice-icon">🖥️</div><div class="sk-choice-label">일반 모드</div><div class="sk-choice-sub">전체 메뉴 보기</div></button>
+          <button class="sk-choice primary" onclick="skGo(1)"><div class="sk-choice-icon">👵</div><div class="sk-choice-label">노인 간편 모드</div><div class="sk-choice-sub">큰 글씨 · 쉬운 단계</div></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S1 매장/포장 -->
+    <div class="sk-screen" id="sk-s1">
+      <div class="sk-content">
+        <div class="sk-q">어디서 드실 건가요?</div>
+        <div class="sk-choices">
+          <button class="sk-choice" onclick="skGo(2)"><div class="sk-choice-icon">🪑</div><div class="sk-choice-label">매장에서<br>마실게요</div></button>
+          <button class="sk-choice primary" onclick="skGo(2)"><div class="sk-choice-icon">🛍️</div><div class="sk-choice-label">포장할게요</div></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2 메뉴 -->
+    <div class="sk-screen" id="sk-s2">
+      <div class="sk-content">
+        <div class="sk-q">어떤 음료 드릴까요?</div>
+        <div class="sk-menu-grid">
+          <div class="sk-menu-card" onclick="skGo(3)"><div class="sk-menu-emoji">☕</div><div class="sk-menu-name">아메리카노</div><div class="sk-menu-price">4,500원</div></div>
+          <div class="sk-menu-card" onclick="skGo(3)"><div class="sk-menu-emoji">🥛</div><div class="sk-menu-name">카페라떼</div><div class="sk-menu-price">5,000원</div></div>
+          <div class="sk-menu-card" onclick="skGo(3)"><div class="sk-menu-emoji">🍵</div><div class="sk-menu-name">녹차라떼</div><div class="sk-menu-price">5,500원</div></div>
+          <div class="sk-menu-card more" onclick="skGo(3)"><div class="sk-menu-emoji">📋</div><div class="sk-menu-name">더보기</div><div class="sk-menu-price">전체 메뉴</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3 온도 -->
+    <div class="sk-screen" id="sk-s3">
+      <div class="sk-content">
+        <div class="sk-q">온도를 선택해 주세요</div>
+        <div class="sk-choices">
+          <button class="sk-choice primary" onclick="skGo(4)"><div class="sk-choice-icon">☀️</div><div class="sk-choice-label">따뜻하게</div><div class="sk-choice-sub">HOT</div></button>
+          <button class="sk-choice" onclick="skGo(4)"><div class="sk-choice-icon">❄️</div><div class="sk-choice-label">차갑게</div><div class="sk-choice-sub">ICED</div></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S4 결제 -->
+    <div class="sk-screen" id="sk-s4">
+      <div class="sk-content">
+        <div class="sk-q">결제 방법을 선택해 주세요</div>
+        <div class="sk-loyalty-panel">
+          <div class="sk-loyalty-icon">🎁</div>
+          <div>
+            <div class="sk-loyalty-title">적립 하시겠어요?</div>
+            <div class="sk-loyalty-desc">나중에 할인받을 수 있어요</div>
+            <div class="sk-loyalty-btns">
+              <button class="sk-loyalty-yes" onclick="openModal('sk-loyalty')">네</button>
+              <button class="sk-loyalty-no" onclick="closeModal('sk-loyalty')">아니요</button>
+            </div>
+          </div>
+        </div>
+        <div class="sk-pay-grid">
+          <button class="sk-pay-card sk-pay-credit" onclick="skGo(5)"><div class="sk-pay-icon">💳</div><div class="sk-pay-label" style="color:#fff;">카드 결제</div></button>
+          <button class="sk-pay-card sk-pay-cash" onclick="skGo(5)"><div class="sk-pay-icon">💵</div><div class="sk-pay-label" style="color:#fff;">현금 결제</div></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S5 카드 꽂기 -->
+    <div class="sk-screen" id="sk-s5">
+      <div class="sk-content">
+        <div class="sk-card-box">
+          <h2>신용카드를</h2>
+          <div class="sk-card-big">투입구에 꽂아주세요</div>
+          <p>결제 오류 시 마그네틱을<br>아래로 향하게 긁어주세요</p>
+          <div class="sk-card-anim">💳</div>
+        </div>
+        <div class="sk-total-box"><span class="sk-total-label">총 결제금액</span><span class="sk-total-amount">4,500원</span></div>
+        <button class="sk-proceed-btn" onclick="skGo(6)">결제 완료 →</button>
+        <button class="sk-cancel-btn" onclick="skGo(4)">결제취소</button>
+      </div>
+    </div>
+
+    <!-- S6 완료 -->
+    <div class="sk-screen" id="sk-s6">
+      <div class="sk-content">
+        <div class="sk-complete-num">23</div>
+        <div class="sk-complete-title">주문이 완료되었습니다!</div>
+        <div class="sk-receipt-box">
+          <div class="sk-receipt-row"><span>아메리카노 따뜻하게 × 1</span><span>4,500원</span></div>
+          <hr class="sk-receipt-divider">
+          <div class="sk-receipt-total"><span>합계 금액</span><span>4,500원</span></div>
+        </div>
+        <div class="sk-complete-sub">진동벨이 울리면 카운터에서 받아가세요 😊</div>
+        <button class="sk-again-btn" onclick="skGo(0)">처음으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div class="sk-guide"><div class="sk-guide-text" id="sk-guide-text">주문 방식을 선택해 주세요.</div></div>
+  </div><!-- /simple-kiosk -->
+
+  <!-- AI 도우미 버튼 (간편 모드 전용) -->
+  <div class="sk-ai-overlay" id="sk-ai-overlay" onclick="closeAi()"></div>
+  <button class="sk-ai-btn" id="sk-ai-btn" onclick="toggleAi(event)">
+    <div class="sk-ai-btn-text">도움 받기</div>
+  </button>
+  <div class="sk-ai-popup" id="sk-ai-popup">
+    <div class="sk-ai-popup-head">
+      <div class="sk-ai-avatar">🤖</div>
+      <div><div class="sk-ai-name">AI 도우미</div><div class="sk-ai-status">● 연결됨</div></div>
+    </div>
+    <div class="sk-ai-bubble">안녕하세요!<br>무엇을 도와드릴까요? 😊</div>
+  </div>
+</div><!-- /kiosk-wrap -->
+
+<!-- ════ COMPLEX MODALS ════ -->
+
+<!-- 아이템 옵션 모달 -->
+<div class="cmodal-back" id="ck-item-modal">
+  <div class="cmodal">
+    <div class="cmodal-hd">
+      <div class="cmodal-img" id="cmi-img">☕</div>
+      <div class="cmodal-hd-info">
+        <div class="cmodal-hd-name" id="cmi-name">아메리카노</div>
+        <div class="cmodal-qty-row">
+          <button class="cmodal-qty-btn" onclick="cmiQty(-1)">−</button>
+          <div class="cmodal-qty-num" id="cmi-qty">1</div>
+          <button class="cmodal-qty-btn" onclick="cmiQty(1)">+</button>
+          <div class="cmodal-price" id="cmi-price">2,500원</div>
+        </div>
+      </div>
+    </div>
+    <div class="cmodal-body">
+      <div class="cmodal-opt-label">온도를 선택해 주세요</div>
+      <div class="cmodal-opt-btns">
+        <button class="cmodal-opt-btn hot sel" id="cmi-hot" onclick="cmiTemp('hot')">HOT</button>
+        <button class="cmodal-opt-btn ice" id="cmi-ice" onclick="cmiTemp('ice')">ICE</button>
+      </div>
+    </div>
+    <div class="cmodal-footer">
+      <button class="cmodal-cancel" onclick="closeCModal('ck-item-modal')">취소</button>
+      <button class="cmodal-confirm" onclick="cmiAdd()">선택완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step1 적립 -->
+<div class="cmodal-back" id="ck-step1-modal">
+  <div class="cmodal">
+    <div class="cstep-hd">Step 1.</div>
+    <div class="cstep-title">적립하시겠습니까?</div>
+    <div class="cstep-desc">회원이시면 [번호조회]를 회원이 아니시면 [회원가입]을 선택해 주시고, 원하지 않으시면 다음으로 이동해주세요.</div>
+    <div class="cstep-opt-row">
+      <button class="cstep-opt-btn" onclick="closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">
+        <div class="cstep-opt-icon">📱</div><div class="cstep-opt-label">번호조회</div>
+      </button>
+      <button class="cstep-opt-btn" style="opacity:.45;pointer-events:none;">
+        <div class="cstep-opt-icon">📷</div><div class="cstep-opt-label">바코드조회</div>
+      </button>
+      <button class="cstep-opt-btn" onclick="closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">
+        <div class="cstep-opt-icon">👤</div><div class="cstep-opt-label">회원가입</div>
+      </button>
+    </div>
+    <div class="cstep-next-row">
+      <div class="cstep-total">결제 금액 <strong id="cs1-total">0원</strong></div>
+      <div class="cstep-nav">
+        <button class="cstep-all-cancel" onclick="closeCModal('ck-step1-modal');ckReset()">전체취소</button>
+        <button class="cstep-prev" onclick="closeCModal('ck-step1-modal')">이전</button>
+        <button class="cstep-next" onclick="closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">다음</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step2 결제방식 -->
+<div class="cmodal-back" id="ck-step2-modal">
+  <div class="cmodal">
+    <div class="cstep-hd">Step 2.</div>
+    <div class="cstep-title">결제방식을 선택해 주세요!</div>
+    <div class="cstep2-methods">
+      <button class="cstep2-method sel" onclick="ckSelPay(this)" id="pay-card">
+        <div class="cstep2-icon">💳</div><div class="cstep2-label">카드 결제</div>
+      </button>
+      <button class="cstep2-method" onclick="ckSelPay(this)">
+        <div class="cstep2-icon">🎫</div><div class="cstep2-label">쿠폰 결제</div>
+      </button>
+      <button class="cstep2-method" onclick="ckSelPay(this)">
+        <div class="cstep2-icon">🏷️</div><div class="cstep2-label">스탬프 쿠폰 결제</div>
+      </button>
+      <button class="cstep2-method" onclick="ckSelPay(this)">
+        <div class="cstep2-icon" style="font-size:18px;font-weight:900;color:#e53935;">PAYCO</div><div class="cstep2-label">PAYCO</div>
+      </button>
+      <button class="cstep2-method" onclick="ckSelPay(this)">
+        <div class="cstep2-icon">💛</div><div class="cstep2-label">카카오페이</div>
+      </button>
+      <button class="cstep2-method" onclick="ckSelPay(this)">
+        <div class="cstep2-icon" style="font-size:16px;font-weight:900;color:#03c75a;">N Pay<br><span style="font-size:11px;color:#e53935;">페이북</span></div><div class="cstep2-label"></div>
+      </button>
+    </div>
+    <div class="cstep-next-row">
+      <div class="cstep-total">결제 금액 <strong id="cs2-total">0원</strong></div>
+      <div class="cstep-nav">
+        <button class="cstep-all-cancel" onclick="closeCModal('ck-step2-modal');ckReset()">전체취소</button>
+        <button class="cstep-prev" onclick="closeCModal('ck-step2-modal');openCModal('ck-step1-modal')">이전</button>
+        <button class="cstep-next" onclick="closeCModal('ck-step2-modal');openCModal('ck-keypad-modal')">다음</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 카드결제 키패드 -->
+<div class="cmodal-back" id="ck-keypad-modal">
+  <div class="cmodal">
+    <div class="ckeypad-hd">
+      <h3>카드결제</h3>
+      <p>결제할 금액을 눌러주세요.</p>
+    </div>
+    <div class="ckeypad-display">
+      <div class="ckeypad-left">
+        <div class="ckeypad-left" style="font-size:12px;color:#666;">남은 금액</div>
+        <div class="ckeypad-remain" id="kp-remain">0원</div>
+        <div class="ckeypad-paid">결제 금액 <span id="kp-paid">0</span>원</div>
+      </div>
+      <button class="ckeypad-btn-all" onclick="kpAll()">남은 금액 전체</button>
+    </div>
+    <div class="ckeypad-grid">
+      <button class="ck-key" onclick="kpNum('1')">1</button>
+      <button class="ck-key" onclick="kpNum('2')">2</button>
+      <button class="ck-key" onclick="kpNum('3')">3</button>
+      <button class="ck-key" onclick="kpNum('4')">4</button>
+      <button class="ck-key" onclick="kpNum('5')">5</button>
+      <button class="ck-key" onclick="kpNum('6')">6</button>
+      <button class="ck-key" onclick="kpNum('7')">7</button>
+      <button class="ck-key" onclick="kpNum('8')">8</button>
+      <button class="ck-key" onclick="kpNum('9')">9</button>
+      <button class="ck-key all-del" onclick="kpClear()">전체 삭제</button>
+      <button class="ck-key" onclick="kpNum('0')">0</button>
+      <button class="ck-key del" onclick="kpDel()">←</button>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px 14px;">
+      <button class="cmodal-cancel" style="flex:1;padding:13px;background:#f5f5f5;border:2px solid #ccc;border-radius:8px;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-keypad-modal');openCModal('ck-step2-modal')">취소</button>
+      <button class="cmodal-confirm" style="flex:1;padding:13px;background:#4a90d9;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-keypad-modal');openCModal('ck-receipt-modal')">선택완료</button>
+    </div>
+    <div class="csim-note">키오스크 연습용입니다. 실제로 결제되지 않습니다.</div>
+  </div>
+</div>
+
+<!-- 영수증 선택 -->
+<div class="cmodal-back" id="ck-receipt-modal">
+  <div class="cmodal">
+    <div class="creceipt-body">
+      <div class="creceipt-title">결제 금액 : <span id="cr-amount">0원</span><br>결제가 정상적으로 처리되었습니다.</div>
+      <div style="margin-top:10px;font-size:13px;color:#333;">영수증을 출력을 하시겠습니까?<br><span style="color:#555;">예 : 출력 &nbsp; 아니오 : 미출력</span></div>
+      <div class="creceipt-prog"><div class="creceipt-prog-fill"></div></div>
+      <div style="margin-top:8px;font-size:12px;color:#555;line-height:1.7;">
+        − 현재 적립 스탬프 : 1<br>
+        − 기존 적립 스탬프 : 5<br>
+        − 누적 적립 스탬프 : 6
+      </div>
+      <div class="creceipt-btns">
+        <button class="creceipt-btn primary" onclick="closeCModal('ck-receipt-modal');openCModal('ck-complete-modal')">예</button>
+        <button class="creceipt-btn" onclick="closeCModal('ck-receipt-modal');openCModal('ck-complete-modal')">아니오</button>
+      </div>
+      <div class="csim-note">키오스크 연습용입니다. 실제로 결제되지 않습니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 결제 완료 -->
+<div class="cmodal-back" id="ck-complete-modal">
+  <div class="cmodal">
+    <div style="border-top:4px solid #4a90d9;"></div>
+    <div class="ccomplete-body">
+      <div class="ccomplete-title">결제가 완료되었습니다.</div>
+      <div style="font-size:13px;color:#555;">상품명<br>대기번호</div>
+      <div class="ccomplete-num">232</div>
+      <div class="ccomplete-sub-blue">영수증 출력이 완료될 때까지 기다려 주세요.</div>
+      <div class="ccomplete-desc">상품제조가 완료되어 대기번호가 호출되면 픽업대로 오시기 바랍니다.<br>감사합니다.</div>
+      <div class="ccomplete-receipt">🧾</div>
+      <button onclick="closeCModal('ck-complete-modal');ckReset()" style="width:100%;padding:13px;background:#4a90d9;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIMPLE: 적립 모달 -->
+<div class="modal-back" id="sk-loyalty">
+  <div class="modal-box">
+    <div class="modal-title">🎁 포인트 적립</div>
+    <div class="modal-body">
+      <div class="modal-desc">포인트를 쌓으면 나중에 할인받을 수 있어요!</div>
+      <div class="modal-btn-row">
+        <button class="modal-yes" onclick="closeModal('sk-loyalty')">네</button>
+        <button class="modal-no" onclick="closeModal('sk-loyalty')">아니요</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── SELECTOR
+function launch(mode){
+  document.getElementById('selector').style.display='none';
+  document.getElementById('kiosk-wrap').style.display='flex';
+  document.getElementById('complex-kiosk').style.display=mode==='complex'?'flex':'none';
+  document.getElementById('simple-kiosk').style.display=mode==='simple'?'flex':'none';
+  const aib=document.getElementById('sk-ai-btn');
+  aib.style.display=mode==='simple'?'flex':'none';
+}
+function goSelector(){
+  document.getElementById('kiosk-wrap').style.display='none';
+  document.getElementById('selector').style.display='flex';
+  ckReset(); skGo(0); closeAi();
+  document.getElementById('sk-ai-btn').style.display='none';
+}
+
+// ─── COMPLEX
+let ckCart=[];
+let cmiCurrent={name:'',emoji:'',price:0,qty:1,temp:'hot'};
+
+function ckCat(el){document.querySelectorAll('.ck-cat').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+
+function ckOpenItem(name,emoji,price){
+  cmiCurrent={name,emoji,price,qty:1,temp:'hot'};
+  document.getElementById('cmi-img').textContent=emoji;
+  document.getElementById('cmi-name').textContent=name;
+  document.getElementById('cmi-qty').textContent='1';
+  document.getElementById('cmi-price').textContent=price.toLocaleString()+'원';
+  document.getElementById('cmi-hot').classList.add('sel');
+  document.getElementById('cmi-ice').classList.remove('sel');
+  openCModal('ck-item-modal');
+}
+function cmiQty(d){
+  cmiCurrent.qty=Math.max(1,cmiCurrent.qty+d);
+  document.getElementById('cmi-qty').textContent=cmiCurrent.qty;
+  document.getElementById('cmi-price').textContent=(cmiCurrent.price*cmiCurrent.qty).toLocaleString()+'원';
+}
+function cmiTemp(t){
+  cmiCurrent.temp=t;
+  document.getElementById('cmi-hot').classList.toggle('sel',t==='hot');
+  document.getElementById('cmi-ice').classList.toggle('sel',t==='ice');
+}
+function cmiAdd(){
+  for(let i=0;i<cmiCurrent.qty;i++) ckCart.push({name:cmiCurrent.name+'('+cmiCurrent.temp.toUpperCase()+')',emoji:cmiCurrent.emoji,price:cmiCurrent.price});
+  closeCModal('ck-item-modal');
+  renderCkCart();
+}
+
+function renderCkCart(){
+  const el=document.getElementById('ck-cart-items');
+  const cnt=document.getElementById('ck-cnt');
+  const tot=document.getElementById('ck-total');
+  if(!ckCart.length){el.innerHTML='<div class="ck-cart-empty">메뉴를 선택하세요</div>';cnt.textContent='(0)';tot.textContent='0원';document.getElementById('ck-prog').style.width='0%';return;}
+  let sum=0;
+  el.innerHTML=ckCart.map((item,i)=>{
+    sum+=item.price;
+    return`<div class="ck-cart-row"><div class="ck-cart-img">${item.emoji}</div><div class="ck-cart-info"><div class="ck-cart-iname">${item.name}</div><div class="ck-cart-iprice">${item.price.toLocaleString()}원</div></div><span class="ck-cart-del" onclick="ckDel(${i})">✕</span></div>`;
+  }).join('');
+  cnt.textContent='('+ckCart.length+')';
+  tot.textContent=sum.toLocaleString()+'원';
+  document.getElementById('ck-prog').style.width=Math.min(ckCart.length*8,50)+'%';
+  document.getElementById('cs1-total').textContent=sum.toLocaleString()+'원';
+  document.getElementById('cs2-total').textContent=sum.toLocaleString()+'원';
+  document.getElementById('kp-remain').textContent=sum.toLocaleString()+'원';
+  document.getElementById('cr-amount').textContent=sum.toLocaleString()+'원';
+}
+function ckDel(i){ckCart.splice(i,1);renderCkCart();}
+function ckReset(){ckCart=[];renderCkCart();kpInput='';}
+function ckOpenStep1(){if(!ckCart.length){return;}openCModal('ck-step1-modal');}
+function ckSelPay(el){document.querySelectorAll('.cstep2-method').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+
+// keypad
+let kpInput='';
+function kpNum(n){kpInput+=n;document.getElementById('kp-paid').textContent=parseInt(kpInput||'0').toLocaleString();}
+function kpDel(){kpInput=kpInput.slice(0,-1);document.getElementById('kp-paid').textContent=parseInt(kpInput||'0').toLocaleString();}
+function kpClear(){kpInput='';document.getElementById('kp-paid').textContent='0';}
+function kpAll(){
+  const s=ckCart.reduce((a,b)=>a+b.price,0);
+  kpInput=String(s);
+  document.getElementById('kp-paid').textContent=s.toLocaleString();
+}
+
+// complex modal
+function openCModal(id){document.getElementById(id).classList.add('on');}
+function closeCModal(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.cmodal-back').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('on');}));
+
+// ─── SIMPLE
+const SKS=['sk-s0','sk-s1','sk-s2','sk-s3','sk-s4','sk-s5','sk-s6'];
+const SKG=['주문 방식을 선택해 주세요.','매장식사 또는 포장 중 선택해 주세요.','원하시는 음료를 눌러 주세요.','음료 온도를 선택해 주세요.','적립 여부 선택 후 결제해 주세요.','카드를 투입구에 꽂아 주세요.','주문이 완료되었습니다!'];
+const SKP=[0,17,34,50,67,84,100];
+const SKL=['시작','1단계','2단계','3단계','4단계','결제 중','완료'];
+let skCur=0;
+function skGo(n){
+  skCur=n;
+  SKS.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',i===n);});
+  document.getElementById('sk-guide-text').textContent=SKG[n]||'';
+  document.getElementById('sk-fill').style.width=SKP[n]+'%';
+  document.getElementById('sk-pct').textContent=SKP[n]+'%';
+  document.getElementById('sk-label').textContent=SKL[n]||'';
+  closeAi();
+}
+function skBack(){if(skCur>0)skGo(skCur-1);}
+
+// simple modal
+function openModal(id){document.getElementById(id).classList.add('on');}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.modal-back').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('on');}));
+
+// AI
+function toggleAi(e){
+  e.stopPropagation();
+  const p=document.getElementById('sk-ai-popup'),o=document.getElementById('sk-ai-overlay');
+  const on=p.classList.toggle('on');
+  o.classList.toggle('on',on);
+}
+function closeAi(){
+  document.getElementById('sk-ai-popup').classList.remove('on');
+  document.getElementById('sk-ai-overlay').classList.remove('on');
+}
+</script>
+</body>
+</html>
