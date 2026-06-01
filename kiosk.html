@@ -516,13 +516,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:#1a1a2e;min-height:100vh;d
     <div class="cstep-title">적립하시겠습니까?</div>
     <div class="cstep-desc">회원이시면 [번호조회]를 회원이 아니시면 [회원가입]을 선택해 주시고, 원하지 않으시면 다음으로 이동해주세요.</div>
     <div class="cstep-opt-row">
-      <button class="cstep-opt-btn" onclick="closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">
+      <button class="cstep-opt-btn" onclick="openCModal('ck-phone-modal')">
         <div class="cstep-opt-icon">📱</div><div class="cstep-opt-label">번호조회</div>
       </button>
       <button class="cstep-opt-btn" style="opacity:.45;pointer-events:none;">
         <div class="cstep-opt-icon">📷</div><div class="cstep-opt-label">바코드조회</div>
       </button>
-      <button class="cstep-opt-btn" onclick="closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">
+      <button class="cstep-opt-btn" onclick="openCModal('ck-signup-modal')">
         <div class="cstep-opt-icon">👤</div><div class="cstep-opt-label">회원가입</div>
       </button>
     </div>
@@ -647,6 +647,100 @@ body{font-family:'Noto Sans KR',sans-serif;background:#1a1a2e;min-height:100vh;d
   </div>
 </div>
 
+<!-- 번호조회 모달 -->
+<div class="cmodal-back" id="ck-phone-modal">
+  <div class="cmodal">
+    <div class="ckeypad-hd" style="background:#1a2744;">
+      <h3>번호 조회</h3>
+      <p>전화번호를 입력해 주세요.</p>
+    </div>
+    <div style="padding:14px 16px 6px;">
+      <div style="background:#f0f7ff;border:2px solid #4a90d9;border-radius:8px;padding:12px 16px;font-size:20px;font-weight:700;color:#1a2744;letter-spacing:4px;text-align:center;min-height:48px;" id="ph-display">-</div>
+    </div>
+    <div class="ckeypad-grid">
+      <button class="ck-key" onclick="phNum('1')">1</button>
+      <button class="ck-key" onclick="phNum('2')">2</button>
+      <button class="ck-key" onclick="phNum('3')">3</button>
+      <button class="ck-key" onclick="phNum('4')">4</button>
+      <button class="ck-key" onclick="phNum('5')">5</button>
+      <button class="ck-key" onclick="phNum('6')">6</button>
+      <button class="ck-key" onclick="phNum('7')">7</button>
+      <button class="ck-key" onclick="phNum('8')">8</button>
+      <button class="ck-key" onclick="phNum('9')">9</button>
+      <button class="ck-key all-del" onclick="phClear()">전체삭제</button>
+      <button class="ck-key" onclick="phNum('0')">0</button>
+      <button class="ck-key del" onclick="phDel()">←</button>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px 16px;">
+      <button class="cmodal-cancel" style="flex:1;padding:13px;background:#f5f5f5;border:2px solid #ccc;border-radius:8px;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-phone-modal');phClear()">취소</button>
+      <button class="cmodal-confirm" style="flex:1;padding:13px;background:#4a90d9;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="phConfirm()">조회</button>
+    </div>
+  </div>
+</div>
+
+<!-- 번호조회 결과 모달 -->
+<div class="cmodal-back" id="ck-phone-result-modal">
+  <div class="cmodal">
+    <div style="border-top:4px solid #4a90d9;"></div>
+    <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+      <div style="font-size:36px;">✅</div>
+      <div style="font-size:16px;font-weight:700;color:#222;">회원 조회 완료</div>
+      <div style="background:#f0f7ff;border-radius:10px;padding:14px 24px;width:100%;">
+        <div style="font-size:13px;color:#888;margin-bottom:6px;">조회된 번호</div>
+        <div style="font-size:18px;font-weight:700;color:#1a2744;" id="ph-result-num">-</div>
+        <div style="font-size:12px;color:#4a90d9;margin-top:8px;">보유 스탬프 : 5개</div>
+      </div>
+      <button style="width:100%;padding:13px;background:#4a90d9;border:none;border-radius:10px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-phone-result-modal');closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">확인 후 결제 진행</button>
+      <button style="width:100%;padding:13px;background:#f0f4f8;border:1px solid #ccc;border-radius:10px;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-phone-result-modal')">다시 입력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원가입 모달 -->
+<div class="cmodal-back" id="ck-signup-modal">
+  <div class="cmodal">
+    <div class="ckeypad-hd" style="background:#1a2744;">
+      <h3>회원가입</h3>
+      <p>정보를 입력해 주세요.</p>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;">이름</div>
+        <input id="su-name" type="text" placeholder="이름을 입력하세요" style="width:100%;padding:12px 14px;border:2px solid #dde3ea;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;" onfocus="this.style.borderColor='#4a90d9'" onblur="this.style.borderColor='#dde3ea'">
+      </div>
+      <div>
+        <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;">전화번호</div>
+        <input id="su-phone" type="tel" placeholder="010-0000-0000" style="width:100%;padding:12px 14px;border:2px solid #dde3ea;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;" onfocus="this.style.borderColor='#4a90d9'" onblur="this.style.borderColor='#dde3ea'">
+      </div>
+      <div>
+        <div style="font-size:12px;color:#888;margin-bottom:6px;font-weight:700;">생년월일</div>
+        <input id="su-birth" type="text" placeholder="YYYYMMDD" maxlength="8" style="width:100%;padding:12px 14px;border:2px solid #dde3ea;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;" onfocus="this.style.borderColor='#4a90d9'" onblur="this.style.borderColor='#dde3ea'">
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:10px;background:#f9f9f9;border-radius:8px;">
+        <input type="checkbox" id="su-agree" style="margin-top:3px;width:16px;height:16px;accent-color:#4a90d9;flex-shrink:0;">
+        <label for="su-agree" style="font-size:12px;color:#555;line-height:1.5;cursor:pointer;">개인정보 수집 및 이용에 동의합니다.<br><span style="color:#4a90d9;">[필수] 마케팅 수신 동의 포함</span></label>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px 16px;">
+      <button style="flex:1;padding:13px;background:#f5f5f5;border:2px solid #ccc;border-radius:8px;font-size:14px;font-weight:700;color:#666;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-signup-modal');suClear()">취소</button>
+      <button style="flex:1;padding:13px;background:#4a90d9;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="suConfirm()">가입완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 회원가입 완료 모달 -->
+<div class="cmodal-back" id="ck-signup-done-modal">
+  <div class="cmodal">
+    <div style="border-top:4px solid #4a90d9;"></div>
+    <div style="padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+      <div style="font-size:40px;">🎉</div>
+      <div style="font-size:17px;font-weight:700;color:#222;">회원가입 완료!</div>
+      <div style="font-size:14px;color:#555;line-height:1.7;" id="su-done-msg">환영합니다!<br>스탬프 적립이 시작됩니다.</div>
+      <button style="width:100%;padding:13px;background:#4a90d9;border:none;border-radius:10px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;" onclick="closeCModal('ck-signup-done-modal');closeCModal('ck-step1-modal');openCModal('ck-step2-modal')">확인 후 결제 진행</button>
+    </div>
+  </div>
+</div>
+
 <!-- SIMPLE: 적립 모달 -->
 <div class="modal-back" id="sk-loyalty">
   <div class="modal-box">
@@ -733,7 +827,50 @@ function ckReset(){ckCart=[];renderCkCart();kpInput='';}
 function ckOpenStep1(){if(!ckCart.length){return;}openCModal('ck-step1-modal');}
 function ckSelPay(el){document.querySelectorAll('.cstep2-method').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
 
-// keypad
+// 번호조회 키패드
+let phInput='';
+function phNum(n){
+  if(phInput.length>=11) return;
+  phInput+=n;
+  phRender();
+}
+function phDel(){phInput=phInput.slice(0,-1);phRender();}
+function phClear(){phInput='';phRender();}
+function phRender(){
+  const d=document.getElementById('ph-display');
+  if(!phInput){d.textContent='-';return;}
+  let s=phInput;
+  if(s.length<=3) d.textContent=s;
+  else if(s.length<=7) d.textContent=s.slice(0,3)+'-'+s.slice(3);
+  else d.textContent=s.slice(0,3)+'-'+s.slice(3,7)+'-'+s.slice(7);
+}
+function phConfirm(){
+  if(phInput.length<10){alert('전화번호를 정확히 입력해 주세요.');return;}
+  const display=document.getElementById('ph-display').textContent;
+  document.getElementById('ph-result-num').textContent=display;
+  closeCModal('ck-phone-modal');
+  openCModal('ck-phone-result-modal');
+  phClear();
+}
+// 회원가입
+function suClear(){
+  document.getElementById('su-name').value='';
+  document.getElementById('su-phone').value='';
+  document.getElementById('su-birth').value='';
+  document.getElementById('su-agree').checked=false;
+}
+function suConfirm(){
+  const name=document.getElementById('su-name').value.trim();
+  const phone=document.getElementById('su-phone').value.trim();
+  const agree=document.getElementById('su-agree').checked;
+  if(!name){alert('이름을 입력해 주세요.');return;}
+  if(!phone){alert('전화번호를 입력해 주세요.');return;}
+  if(!agree){alert('개인정보 수집 및 이용에 동의해 주세요.');return;}
+  document.getElementById('su-done-msg').innerHTML=`<strong>${name}</strong>님, 환영합니다!<br>스탬프 적립이 시작됩니다.`;
+  closeCModal('ck-signup-modal');
+  openCModal('ck-signup-done-modal');
+  suClear();
+}
 let kpInput='';
 function kpNum(n){kpInput+=n;document.getElementById('kp-paid').textContent=parseInt(kpInput||'0').toLocaleString();}
 function kpDel(){kpInput=kpInput.slice(0,-1);document.getElementById('kp-paid').textContent=parseInt(kpInput||'0').toLocaleString();}
